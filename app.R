@@ -37,9 +37,12 @@ ui <- navbarPage(title = "Game board database",
                                                      tags$hr(style="border-color: darkgrey;"))),
                                      fluidRow(column(12,
                                                      HTML("<h4><b>Victory barplot</b></h4>"))),
-                                     fluidRow(column(12,
-                                                     plotlyOutput("chess_Barplot",height = "1000px")
-                                                     )),
+                                     fluidRow(column(4,
+                                                     plotlyOutput("chess_victoryBarplot",height = "1000px")
+                                                     ),
+                                              column(8,
+                                                     plotlyOutput("chess_bwBarplot",height = "1000px")
+                                              )),
                                      fluidRow(column(12,
                                                      tags$hr(style="border-color: darkgrey;")))),
                             tabPanel("Data input",
@@ -104,7 +107,7 @@ server <- function(input, output) {
     read_sheet(sheet_id,sheet = "Chess")
   })
   
-  output$chess_Barplot <- renderPlotly({
+  output$chess_victoryBarplot <- renderPlotly({
     
     chess_df <- chess_Data()
     
@@ -114,6 +117,12 @@ server <- function(input, output) {
     
     chess_bp_df$Victory <- factor(x = chess_bp_df$Victory, levels = c("FALSE", "TRUE"))
     
+    chess_max <- chess_df |> 
+      group_by(Player) |> 
+      tally()
+    
+    chess_max <- max(chess_max$n)
+    
     chess_bp <- ggplot(chess_bp_df, aes(fill=Victory, y=n, x=Player)) + 
       geom_bar(position="stack", stat="identity")+
       ylab("Number of matches")+
@@ -121,13 +130,53 @@ server <- function(input, output) {
                         direction = -1,
                         name="",
                         labels=c("Loss", "Victory"))+
-      scale_y_continuous(limits = c(0,max(chess_bp_df$n)),breaks = seq(0, max(chess_bp_df$n), by = 1))+
+      scale_y_continuous(limits = c(0,chess_max),breaks = seq(0, chess_max, by = 1))+
       theme_minimal()+
       theme(axis.text=element_text(size=18),axis.title=element_text(size=20,face="bold"))+
       theme(legend.title = element_text(size = 16, face = "bold"),
             legend.text = element_text(size = 14),
             legend.key.size = unit(1, 'cm'),
             legend.position = "none")
+    
+    
+    print(chess_bp)
+    
+  })
+  
+  output$chess_bwBarplot <- renderPlotly({
+    
+    chess_df <- chess_Data()
+    
+    chess_bp_df <- chess_df |> 
+      group_by(Player, Set, Victory) |> 
+      tally()
+    
+    chess_bp_df$Victory <- factor(x = chess_bp_df$Victory, levels = c("FALSE", "TRUE"))
+    
+    chess_max <- chess_df |> 
+      group_by(Player) |> 
+      tally()
+    
+    chess_max <- max(chess_max$n)
+    
+    chess_bp <- ggplot(chess_bp_df, aes(fill=Victory, y=n, x=Player)) +
+      facet_wrap(~Set)+
+      geom_bar(position="stack", stat="identity")+
+      ylab("Number of matches")+
+      scale_fill_brewer(palette = "Accent",
+                        direction = -1,
+                        name="",
+                        labels=c("Loss", "Victory"))+
+      scale_y_continuous(limits = c(0,chess_max),breaks = seq(0, chess_max, by = 1))+
+      theme_minimal()+
+      theme(axis.text=element_text(size=18),
+            axis.title=element_text(size=20,face="bold"),
+            strip.text = element_text(size = 20), face = "bold")+
+      theme(legend.title = element_text(size = 16, face = "bold"),
+            legend.text = element_text(size = 14),
+            legend.key.size = unit(1, 'cm'),
+            legend.position = "none")
+    
     
     print(chess_bp)
     
