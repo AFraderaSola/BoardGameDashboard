@@ -1,0 +1,171 @@
+############################
+######## Libraries #########
+############################
+
+# Load packages used by the app. Install missing packages, if needed.
+library(shiny)
+library(bslib)
+library(thematic)
+library(tidyverse)
+library(gitlink)
+library(shinyBS)
+library(shinythemes)
+library(googlesheets4)
+library(plotly)
+set.seed(666)
+
+############################
+######### Script ###########
+############################
+
+gs4_auth(cache = ".secrets", email = "afraderasola@gmail.com")
+
+sheet_id <- "https://docs.google.com/spreadsheets/d/1HBo4QRtaiSEl8UA0PHhWbxBtg4BpTKf_7KF1Bny9tRs/edit?gid=0#gid=0"
+
+server <- function(input, output) {
+  
+  chess_inputData <- eventReactive(input$chess_submit, {
+    
+    data <- data.frame(
+      Date = input$chess_date,
+      Day_Period = input$chess_dayeperiod,
+      Player = input$chess_player,
+      Set = input$chess_set,
+      Victory = input$chess_victory
+    )
+    
+    sheet_append(sheet_id, data, "Chess")
+    
+  })
+  
+  output$chess_df <- renderDataTable({
+    chess_inputData()
+    read_sheet(sheet_id)
+  })
+  
+  chess_Data <- reactive({
+    read_sheet(sheet_id,sheet = "Chess")
+  })
+  
+  output$chess_victoryBarplot <- renderPlotly({
+    
+    chess_df <- chess_Data()
+    
+    chess_bp_df <- chess_df |> 
+      group_by(Player, Victory) |> 
+      tally()
+    
+    chess_bp_df$Victory <- factor(x = chess_bp_df$Victory, levels = c("FALSE", "TRUE"))
+    
+    chess_bp_df$Player <- factor(x = chess_bp_df$Player, levels = c("Emily", "Albert"))
+    
+    chess_max <- chess_df |> 
+      group_by(Player) |> 
+      tally()
+    
+    chess_max <- max(chess_max$n)
+    
+    chess_bp <- ggplot(chess_bp_df, aes(fill=Victory, y=n, x=Player)) + 
+      geom_bar(position="stack", stat="identity")+
+      ylab("Number of matches")+
+      scale_fill_brewer(palette = "Accent",
+                        direction = -1,
+                        name="",
+                        labels=c("Loss", "Victory"))+
+      scale_y_continuous(limits = c(0,chess_max),breaks = seq(0, chess_max, by = 1))+
+      coord_flip()+
+      theme_minimal()+
+      theme(axis.text=element_text(size=18),axis.title=element_text(size=20,face="bold"))+
+      theme(legend.title = element_text(size = 16, face = "bold"),
+            legend.text = element_text(size = 14),
+            legend.key.size = unit(1, 'cm'),
+            legend.position = "none")
+    
+    
+    print(chess_bp)
+    
+  })
+  
+  output$chess_bwBarplot <- renderPlotly({
+    
+    chess_df <- chess_Data()
+    
+    chess_bp_df <- chess_df |> 
+      group_by(Player, Set, Victory) |> 
+      tally()
+    
+    chess_bp_df$Victory <- factor(x = chess_bp_df$Victory, levels = c("FALSE", "TRUE"))
+    
+    chess_max <- chess_df |> 
+      group_by(Player, Set) |> 
+      tally()
+    
+    chess_max <- max(chess_max$n)
+    
+    chess_bp <- ggplot(chess_bp_df, aes(fill=Victory, y=n, x=Player)) +
+      facet_wrap(~Set)+
+      geom_bar(position="stack", stat="identity")+
+      ylab("Number of matches")+
+      scale_fill_brewer(palette = "Accent",
+                        direction = -1,
+                        name="",
+                        labels=c("Loss", "Victory"))+
+      scale_y_continuous(limits = c(0,chess_max),breaks = seq(0, chess_max, by = 1))+
+      theme_minimal()+
+      theme(axis.text=element_text(size=18),
+            axis.title=element_text(size=20,face="bold"),
+            strip.text = element_text(size = 20), face = "bold")+
+      theme(legend.title = element_text(size = 16, face = "bold"),
+            legend.text = element_text(size = 14),
+            legend.key.size = unit(1, 'cm'),
+            legend.position = "none")
+    
+    
+    print(chess_bp)
+    
+  })
+  
+  output$chess_dpBarplot <- renderPlotly({
+    
+    chess_df <- chess_Data()
+    
+    chess_bp_df <- chess_df |> 
+      group_by(Player, Day_Period, Victory) |> 
+      tally()
+    
+    chess_bp_df$Victory <- factor(x = chess_bp_df$Victory, levels = c("FALSE", "TRUE"))
+    
+    chess_bp_df$Day_Period <- factor(x = chess_bp_df$Day_Period, levels = c("Morning", "Afternoon",
+                                                                            "Evening", "Night"))
+    
+    
+    chess_max <- chess_df |> 
+      group_by(Player, Set) |> 
+      tally()
+    
+    chess_max <- max(chess_max$n)
+    
+    chess_bp <- ggplot(chess_bp_df, aes(fill=Victory, y=n, x=Player)) +
+      facet_wrap(~Day_Period)+
+      geom_bar(position="stack", stat="identity")+
+      ylab("Number of matches")+
+      scale_fill_brewer(palette = "Accent",
+                        direction = -1,
+                        name="",
+                        labels=c("Loss", "Victory"))+
+      scale_y_continuous(limits = c(0,chess_max),breaks = seq(0, chess_max, by = 1))+
+      theme_minimal()+
+      theme(axis.text=element_text(size=18),
+            axis.title=element_text(size=20,face="bold"),
+            strip.text = element_text(size = 20), face = "bold")+
+      theme(legend.title = element_text(size = 16, face = "bold"),
+            legend.text = element_text(size = 14),
+            legend.key.size = unit(1, 'cm'),
+            legend.position = "none")
+    
+    
+    print(chess_bp)
+    
+  })
+  
+}
