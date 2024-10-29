@@ -50,7 +50,7 @@ ui <- navbarPage(title = "Game board database",
                                                        label = "Input Date (YYYYMMDD):"
                                                      )),
                                               column(2,
-                                                     selectInput(inputId = "chess_dayeperiod", 
+                                                     selectInput(inputId = "chess_dayperiod", 
                                                                  label = "Select Day period:", 
                                                                  choices = c("Morning", "Afternoon", "Evening", "Night")
                                                      )),
@@ -76,4 +76,59 @@ ui <- navbarPage(title = "Game board database",
                                      fluidRow(column(12,
                                                      dataTableOutput("chess_df"))),
                                      fluidRow(column(12,
-                                                     tags$hr(style="border-color: darkgrey;")))))))
+                                                     tags$hr(style="border-color: darkgrey;")))))),
+                 tabPanel("Calico",
+                          tabsetPanel(
+                            tabPanel("Overview",
+                                     fluidRow(column(12,
+                                                     tags$hr(style="border-color: darkgrey;"))),
+                                     fluidRow(column(12,
+                                                     HTML("<h4><b>Victory barplots</b></h4>"))),
+                                     fluidRow(column(12,
+                                                     plotlyOutput("calico_victoryBarplot",height = "750px")
+                                     )),
+                                     fluidRow(column(8,
+                                                     plotlyOutput("calico_dpBarplot",height = "1000px"))),
+                                     fluidRow(column(12,
+                                                     tags$hr(style="border-color: darkgrey;")))),
+                            tabPanel("Data input",
+                                     fluidRow(column(12,
+                                                     tags$hr(style="border-color: darkgrey;"))),
+                                     fluidRow(column(2,
+                                                     textInput(
+                                                       inputId = "calico_date",
+                                                       label = "Input Date (YYYYMMDD):"
+                                                     )),
+                                              column(2,
+                                                     selectInput(inputId = "calico_dayperiod", 
+                                                                 label = "Select Day period:", 
+                                                                 choices = c("Morning", "Afternoon", "Evening", "Night")
+                                                     )),
+                                              column(2,
+                                                     selectInput(inputId = "calico_player", 
+                                                                 label = "Select Player:", 
+                                                                 choices = c("Albert", "Emily")
+                                                     )),
+                                              column(2,
+                                                     textInput(
+                                                       inputId = "calico_hexagon",
+                                                       label = "Input Hexagon points:"
+                                                     )),
+                                              column(2,
+                                                     textInput(
+                                                       inputId = "calico_katze",
+                                                       label = "Input Katze points:"
+                                                     )),
+                                              column(2,
+                                                     textInput(
+                                                       inputId = "calico_button",
+                                                       label = "Input Button points:"
+                                                     ))),
+                                     fluidRow(column(2,
+                                                     actionButton("calico_submit",
+                                                                  "Submit"))),
+                                     fluidRow(column(12,
+                                                     dataTableOutput("calico_df"))),
+                                     fluidRow(column(12,
+                                                     tags$hr(style="border-color: darkgrey;"))))))
+                 )

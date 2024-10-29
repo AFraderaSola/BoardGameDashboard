@@ -24,11 +24,15 @@ sheet_id <- "https://docs.google.com/spreadsheets/d/1HBo4QRtaiSEl8UA0PHhWbxBtg4B
 
 server <- function(input, output) {
   
+  #### Input Data ####
+  
+  ### Chess
+  
   chess_inputData <- eventReactive(input$chess_submit, {
     
     data <- data.frame(
       Date = input$chess_date,
-      Day_Period = input$chess_dayeperiod,
+      Day_Period = input$chess_dayperiod,
       Player = input$chess_player,
       Set = input$chess_set,
       Victory = input$chess_victory
@@ -40,8 +44,35 @@ server <- function(input, output) {
   
   output$chess_df <- renderDataTable({
     chess_inputData()
-    read_sheet(sheet_id)
+    read_sheet(sheet_id, "Chess")
   })
+  
+  ### Calico
+  
+  calico_inputData <- eventReactive(input$calico_submit, {
+    
+    data <- data.frame(
+      Date = input$calico_date,
+      Day_Period = input$calico_dayperiod,
+      Player = input$calico_player,
+      Hexagon = input$calico_hexagon,
+      Katze = input$calico_katze,
+      Button = input$calico_button
+    )
+    
+    sheet_append(sheet_id, data, "Calico")
+    
+  })
+  
+  output$calico_df <- renderDataTable({
+    calico_inputData()
+    read_sheet(sheet_id, "Calico")
+  })
+  
+  
+  #### Victory Functions ####
+  
+  ### Chess
   
   chess_Data <- reactive({
     read_sheet(sheet_id,sheet = "Chess")
